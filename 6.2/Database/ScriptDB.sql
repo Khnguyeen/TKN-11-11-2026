@@ -1,0 +1,46 @@
+IF DB_ID(N'HRMDB') IS NULL CREATE DATABASE HRMDB;
+GO
+USE HRMDB;
+GO
+IF OBJECT_ID('dbo.BangLuong','U') IS NOT NULL DROP TABLE dbo.BangLuong;
+IF OBJECT_ID('dbo.BangChamCong','U') IS NOT NULL DROP TABLE dbo.BangChamCong;
+IF OBJECT_ID('dbo.NhanVien','U') IS NOT NULL DROP TABLE dbo.NhanVien;
+IF OBJECT_ID('dbo.PhongBan','U') IS NOT NULL DROP TABLE dbo.PhongBan;
+GO
+CREATE TABLE PhongBan(
+ MaPB INT IDENTITY(1,1) PRIMARY KEY,
+ TenPB NVARCHAR(100) NOT NULL,
+ MoTa NVARCHAR(255)
+);
+CREATE TABLE NhanVien(
+ MaNV INT IDENTITY(1,1) PRIMARY KEY,
+ HoTen NVARCHAR(100) NOT NULL,
+ NgaySinh DATETIME NULL,
+ CCCD VARCHAR(20) UNIQUE,
+ MaPB INT NOT NULL REFERENCES PhongBan(MaPB),
+ LuongCoBan DECIMAL(18,2) NOT NULL CHECK(LuongCoBan>0),
+ HeSoLuong FLOAT NOT NULL DEFAULT 1.0
+);
+CREATE TABLE BangChamCong(
+ MaCong INT IDENTITY(1,1) PRIMARY KEY,
+ MaNV INT NOT NULL REFERENCES NhanVien(MaNV),
+ ThangNam VARCHAR(7) NOT NULL,
+ SoNgayCong FLOAT NOT NULL CHECK(SoNgayCong>=0 AND SoNgayCong<=31),
+ SoGioOT FLOAT NOT NULL DEFAULT 0,
+ CONSTRAINT UQ_BangChamCong UNIQUE(MaNV,ThangNam)
+);
+-- Đề vừa yêu cầu MaLuong là PK vừa yêu cầu PK(MaNV,ThangNam).
+-- Chọn MaLuong làm PK và UNIQUE(MaNV,ThangNam) để bảo đảm mỗi nhân viên có một bảng lương/tháng.
+CREATE TABLE BangLuong(
+ MaLuong INT IDENTITY(1,1) PRIMARY KEY,
+ MaNV INT NOT NULL REFERENCES NhanVien(MaNV),
+ ThangNam VARCHAR(7) NOT NULL,
+ ThucLinh DECIMAL(18,2) NOT NULL,
+ CONSTRAINT UQ_BangLuong_NhanVien_Thang UNIQUE(MaNV,ThangNam)
+);
+INSERT INTO PhongBan(TenPB,MoTa) VALUES
+(N'Công nghệ thông tin',N'Phát triển phần mềm'),(N'Kế toán',N'Tài chính và kế toán');
+INSERT INTO NhanVien(HoTen,NgaySinh,CCCD,MaPB,LuongCoBan,HeSoLuong) VALUES
+(N'Nguyễn Minh Anh','2000-05-10','001200000001',1,12000000,1.2),
+(N'Trần Hoàng Nam','1998-08-20','001200000002',2,11000000,1.1),
+(N'Lê Thu Hà','2001-03-15','001200000003',1,10000000,1.0);
